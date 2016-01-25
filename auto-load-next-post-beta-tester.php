@@ -3,20 +3,28 @@
  * Plugin Name: Auto Load Next Post Beta Tester
  * Plugin URI: https://github.com/seb86/Auto-Load-Next-Post-Beta-Tester
  * Description: Run bleeding edge versions of Auto Load Next Post from Github. This will replace your installed version of Auto Load Next Post with the latest tagged release on Github - use with caution, and not on production sites. You have been warned.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Sebastien Dumont
  * Author URI: http://sebastiendumont.com
  * Requires at least: 4.2
- * Tested up to: 4.4
+ * Tested up to: 4.4.1
  *
  * Based on WP_GitHub_Updater by Joachim Kudish.
  * Forked from WooCommerce Beta Tester by Mike Jolly and Claudio Sanches.
  */
-if ( ! defined( 'ABSPATH' ) ) {
+if ( ! defined('ABSPATH') ) {
 	exit;
 }
 
-if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
+/**
+ * Confirm Auto Load Next Post is at least installed before doing anything
+ * Curiously, developers are discouraged from using WP_PLUGIN_DIR and not given a
+ * function with which to get the plugin directory, so this is what we have to do
+ */
+if ( ! file_exists( trailingslashit( dirname( dirname( __FILE__ ) ) ) . 'auto-load-next-post/auto-load-next-post.php') ) :
+	add_action('admin_notices', 'alnpbt_auto_load_next_post_not_installed');
+
+elseif ( ! class_exists('Auto_Load_Next_Post_Beta_Tester') ) :
 
 	/**
 	 * Auto_Load_Next_Post_Beta_Tester Main Class
@@ -40,7 +48,8 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 		 * Ran on activation to flush update cache
 		 */
 		public static function activate() {
-			delete_site_transient( 'update_plugins' );
+			delete_site_transient('update_plugins');
+			delete_site_transient('auto_load_next_post_latest_tag');
 		}
 
 		/**
@@ -54,11 +63,11 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 				'api_url'            => 'https://api.github.com/repos/seb86/auto-load-next-post',
 				'github_url'         => 'https://github.com/seb86/Auto-Load-Next-Post',
 				'requires'           => '4.2',
-				'tested'             => '4.3.1'
+				'tested'             => '4.4.1'
 			);
-			add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'api_check' ) );
-			add_filter( 'plugins_api', array( $this, 'get_plugin_info' ), 10, 3 );
-			add_filter( 'upgrader_source_selection', array( $this, 'upgrader_source_selection' ), 10, 3 );
+			add_filter('pre_set_site_transient_update_plugins', array($this, 'api_check'));
+			add_filter('plugins_api', array($this, 'get_plugin_info'), 10, 3);
+			add_filter('upgrader_source_selection', array($this, 'upgrader_source_selection'), 10, 3);
 		}
 
 		/**
@@ -89,7 +98,7 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 		/**
 		 * Get New Version from GitHub
 		 *
-		 * @since 1.0
+		 * @version 1.0.1
 		 * @return int $version the version number
 		 */
 		public function get_latest_tag() {
@@ -97,18 +106,30 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 
 			if ( $this->overrule_transients() || empty( $tagged_version ) ) {
 
-				$raw_response = wp_remote_get( trailingslashit( $this->config['api_url'] ) . 'tags' );
+				$raw_response = wp_remote_get( trailingslashit( $this->config['api_url'] ) . 'releases' );
 
 				if ( is_wp_error( $raw_response ) ) {
 					return false;
 				}
 
-				$tags = json_decode( $raw_response['body'] );
+				$releases       = json_decode( $raw_response['body'] );
+				$tagged_version = false;
+
+				if ( is_array( $releases ) ) {
+					foreach ( $releases as $release ) {
+						if ( $release->prerelease ) {
+							$tagged_version = $release->tag_name;
+							break;
+						}
+					}
+				}
+
+				/*$tags = json_decode( $raw_response['body'] );
 
 				if ( is_array( $tags ) ) {
 					$latest_tag     = $tags[0];
 					$tagged_version = $latest_tag->name;
-				}
+				}*/
 
 				// refresh every 6 hours
 				if ( ! empty( $tagged_version ) ) {
@@ -122,7 +143,7 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 		/**
 		 * Get GitHub Data from the specified repository
 		 *
-		 * @since 1.0
+		 * @since 1.0.0
 		 * @return array $github_data the data
 		 */
 		public function get_github_data() {
@@ -153,7 +174,7 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 		/**
 		 * Get update date
 		 *
-		 * @since 1.0
+		 * @since 1.0.0
 		 * @return string $date the date
 		 */
 		public function get_date() {
@@ -164,7 +185,7 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 		/**
 		 * Get plugin description
 		 *
-		 * @since 1.0
+		 * @since 1.0.0
 		 * @return string $description the description
 		 */
 		public function get_description() {
@@ -175,7 +196,7 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 		/**
 		 * Get Plugin data
 		 *
-		 * @since 1.0
+		 * @since 1.0.0
 		 * @return object $data the data
 		 */
 		public function get_plugin_data() {
@@ -185,7 +206,7 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 		/**
 		 * Hook into the plugin update check and connect to GitHub
 		 *
-		 * @since 1.0
+		 * @since 1.0.0
 		 * @param object  $transient the plugin data transient
 		 * @return object $transient updated plugin data transient
 		 */
@@ -225,7 +246,7 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 		/**
 		 * Get Plugin info
 		 *
-		 * @since 1.0
+		 * @since 1.0.0
 		 * @param bool    $false  always false
 		 * @param string  $action the API function being performed
 		 * @param object  $args   plugin arguments
@@ -263,7 +284,7 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 		public function upgrader_source_selection( $source, $remote_source, $upgrader ) {
 			global $wp_filesystem;
 
-			if ( strstr( $source, '/seb86-auto-load-next-post-' ) ) {
+			if ( strstr( $source, '/seb86-Auto-Load-Next-Post-' ) ) {
 				$corrected_source = trailingslashit( $remote_source ) . trailingslashit( $this->config[ 'proper_folder_name' ] );
 
 				if ( $wp_filesystem->move( $source, $corrected_source, true ) ) {
@@ -277,8 +298,17 @@ if ( ! class_exists( 'Auto_Load_Next_Post_Beta_Tester' ) ) :
 		}
 	}
 
-	register_activation_hook( __FILE__, array( 'Auto_Load_Next_Post_Beta_Tester', 'activate' ) );
+	register_activation_hook(__FILE__, array('Auto_Load_Next_Post_Beta_Tester', 'activate'));
 
-	add_action( 'admin_init', array( 'Auto_Load_Next_Post_Beta_Tester', 'instance' ) );
+	add_action('admin_init', array('Auto_Load_Next_Post_Beta_Tester', 'instance'));
 
 endif;
+
+/**
+ * Auto Load Next Post Not Installed Notice
+ */
+if ( ! function_exists('alnpbt_auto_load_next_post_not_installed') ) {
+	function alnpbt_auto_load_next_post_not_installed() {
+		echo '<div class="error"><p>' . sprintf( __('Auto Load Next Post Beta Tester requires %s to be installed.', 'auto-load-next-post-beta-tester'), '<a href="http://autoloadnextpost.com/" target="_blank">Auto Load Next Post</a>') . '</p></div>';
+	}
+}
