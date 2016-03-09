@@ -19,7 +19,7 @@ Just like with any plugin, this will not check for updates on every admin page l
 
 Based on WP_GitHub_Updater by Joachim Kudish and code by Patrick Garman.
 
-Forked from the WooCommerce Beta Tester by Mike Jolly and Claudio Sanches.
+Forked from the WooCommerce Beta Tester by Mike Jolley and Claudio Sanches.
 
 == Changelog ==
 
