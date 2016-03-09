@@ -10,7 +10,7 @@
  * Tested up to: 4.4.1
  *
  * Based on WP_GitHub_Updater by Joachim Kudish.
- * Forked from WooCommerce Beta Tester by Mike Jolly and Claudio Sanches.
+ * Forked from WooCommerce Beta Tester by Mike Jolley and Claudio Sanches.
  */
 if ( ! defined('ABSPATH') ) {
 	exit;
