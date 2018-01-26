@@ -16,12 +16,12 @@ module.exports = function(grunt) {
 					mainFile: '<%= pkg.name %>.php', // Main project file.
 					potFilename: '<%= pkg.name %>.pot', // Name of the POT file.
 					potHeaders: {
-						'Report-Msgid-Bugs-To': 'https://github.com/seb86/WooCommerce-Cart-REST-API/issues',
+						'Report-Msgid-Bugs-To': 'https://github.com/AutoLoadNextPost/alnp-beta-tester/issues',
 						'language-team': 'Sébastien Dumont <mailme@sebastiendumont.com>',
 						'language': 'en_US'
 					},
 					exclude: [
-						'woo-dependencies/.*',
+						'releases',
 						'node_modules'
 					]
 				}
@@ -52,7 +52,6 @@ module.exports = function(grunt) {
 				src:  [
 					'*.php',
 					'**/*.php', // Include all files
-					'!woo-dependencies/**', // Exclude woo-dependencies/
 					'!node_modules/**' // Exclude node_modules/
 				],
 				expand: true
