@@ -2,7 +2,8 @@
 Author URI: http://autoloadnextpost.com/
 Plugin URI: https://github.com/AutoLoadNextPost/alnp-beta-tester
 Contributors: autoloadnextpost
-Tags: auto load next post, beta tester, bleeding edge, prerelease
+Tags: Auto Load Next Post, beta tester, bleeding edge, prerelease
+Requires PHP: 5.6+
 Requires at least: 4.5
 Tested up to: 4.9.2
 Stable Tag: 2.0.0
