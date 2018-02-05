@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Load Next Post: Beta Tester
  * Plugin URI: https://github.com/AutoLoadNextPost/alnp-beta-tester
- * Version: 2.0.0
+ * Version: 2.0.1
  * Description: Run bleeding edge versions of Auto Load Next Post from the GitHub repo. This will replace your installed version of Auto Load Next Post with the latest tagged prerelease on GitHub - use with caution, and not on production sites. You have been warned.
  * Author: Auto Load Next Post
  * Author URI: https://autoloadnextpost.com
@@ -55,7 +55,7 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 * @static
 		 * @since  2.0.0
 		 */
-		private static $version = '2.0.0';
+		private static $version = '2.0.1';
 
 		/**
 		 * Main Instance
@@ -101,7 +101,7 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 				'plugin_file'        => 'auto-load-next-post/auto-load-next-post.php',
 				'slug'               => 'auto-load-next-post',
 				'proper_folder_name' => 'auto-load-next-post',
-				'api_url'            => 'https://api.github.com/repos/AutoLoadNextPost/auto-load-next-post',
+				'api_url'            => 'https://api.github.com/repos/AutoLoadNextPost/Auto-Load-Next-Post',
 				'github_url'         => 'https://github.com/AutoLoadNextPost/Auto-Load-Next-Post',
 				'requires'           => '4.5',
 				'tested'             => '4.9.2'
@@ -134,10 +134,8 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 * @since  2.0.0
 		 */
 		public static function flush_update_cache() {
-			delete_site_transient( 'update_plugins' );
+			delete_site_transient( 'update_plugins' ); // Clear all plugin update data
 			delete_site_transient( 'auto_load_next_post_latest_tag' ); // Previous beta tester value
-			delete_site_transient( 'auto-load-next-post_latest_tag' ); // Previous beta tester value
-			delete_site_transient( md5( 'auto-load-next-post' ) . '_latest_tag' );
 		} // END flush_update_cache()
 
 		/**
@@ -168,20 +166,24 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		/**
 		 * Update the required plugin data arguments.
 		 *
-		 * @access public
-		 * @since  1.0.0
-		 * @return array
+		 * @access  public
+		 * @since   1.0.0
+		 * @version 2.0.1
+		 * @return  array
 		 */
 		public function set_update_args() {
 			$plugin_data                    = $this->get_plugin_data();
-			$this->config[ 'plugin_name' ]  = $plugin_data['Name'];
+			$this->config[ 'plugin_name' ]  = 'Auto Load Next Post (Pre-Release ' . $this->get_latest_prerelease() . ')';
 			$this->config[ 'version' ]      = $plugin_data['Version'];
 			$this->config[ 'author' ]       = $plugin_data['Author'];
 			$this->config[ 'homepage' ]     = $plugin_data['PluginURI'];
-			$this->config[ 'new_version' ]  = $this->get_latest_prerelease();
+			$this->config[ 'new_version' ]  = str_replace( 'v', '', $this->get_latest_prerelease() );
 			$this->config[ 'last_updated' ] = $this->get_date();
 			$this->config[ 'description' ]  = $this->get_description();
-			$this->config[ 'zip_url' ]      = 'https://github.com/AutoLoadNextPost/Auto-Load-Next-Post/zipball/' . $this->config[ 'new_version' ];
+			$this->config[ 'changelog' ]    = $this->get_changelog();
+			$this->config[ 'zip_name' ]     = $this->get_latest_prerelease();
+
+			$this->config[ 'zip_url' ]      = 'https://github.com/AutoLoadNextPost/Auto-Load-Next-Post/zipball/' . $this->config[ 'zip_name' ];
 		} // END set_update_args()
 
 		/**
@@ -239,6 +241,47 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		} // END get_latest_prerelease()
 
 		/**
+		 * Get Changelog of New Version from GitHub.
+		 *
+		 * @access public
+		 * @since  2.0.1
+		 * @return string $changelog of the latest prerelease
+		 */
+		public function get_latest_prerelease_changelog() {
+			$changelog = get_site_transient( md5( $this->config['slug'] ) . '_latest_changelog' );
+
+			if ( $this->overrule_transients() || empty( $changelog ) ) {
+
+				$raw_response = wp_remote_get( trailingslashit( $this->config['api_url'] ) . 'releases' );
+
+				if ( is_wp_error( $raw_response ) ) {
+					return false;
+				}
+
+				$releases  = json_decode( $raw_response['body'] );
+				$changelog = false;
+
+				if ( is_array( $releases ) ) {
+					foreach ( $releases as $release ) {
+
+						// If the release is a pre-release then return the body.
+						if ( $release->prerelease ) {
+							$changelog = $release->body;
+							break;
+						}
+					}
+				}
+
+				// Refresh every 6 hours.
+				if ( ! empty( $changelog ) ) {
+					set_site_transient( md5( $this->config['slug'] ) . '_latest_changelog', $changelog, 60*60*6 );
+				}
+			}
+
+			return $changelog;
+		} // END get_latest_prerelease_changelog()
+
+		/**
 		 * Get GitHub Data from the specified repository.
 		 *
 		 * @access public
@@ -276,7 +319,7 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 *
 		 * @access public
 		 * @since  1.0.0
-		 * @return string $date the date
+		 * @return string $_date the date
 		 */
 		public function get_date() {
 			$_date = $this->get_github_data();
@@ -288,12 +331,24 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 *
 		 * @access public
 		 * @since  1.0.0
-		 * @return string $description the description
+		 * @return string $_description the description
 		 */
 		public function get_description() {
 			$_description = $this->get_github_data();
 			return ! empty( $_description->description ) ? $_description->description : false;
 		} // END get_description()
+
+		/**
+		 * Get plugin changelog.
+		 *
+		 * @access public
+		 * @since  2.0.1
+		 * @return string $_changelog the changelog of the release
+		 */
+		public function get_changelog() {
+			$_changelog = $this->get_latest_prerelease_changelog();
+			return ! empty( $_changelog ) ? $_changelog : false;
+		} // END get_changelog()
 
 		/**
 		 * Get Plugin data.
@@ -323,6 +378,7 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 
 			// Clear our transient.
 			delete_site_transient( md5( $this->config['slug'] ) . '_latest_tag' );
+			delete_site_transient( md5( $this->config['slug'] ) . '_latest_changelog' );
 
 			// Update tags.
 			$this->set_update_args();
@@ -377,7 +433,10 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 			$response->tested        = $this->config['tested'];
 			$response->downloaded    = 0;
 			$response->last_updated  = $this->config['last_updated'];
-			$response->sections      = array( 'description' => $this->config['description'] );
+			$response->sections      = array(
+				'description' => $this->config['description'],
+				'changelog'   => $this->config['changelog']
+			);
 			$response->download_link = $this->config['zip_url'];
 
 			return $response;
