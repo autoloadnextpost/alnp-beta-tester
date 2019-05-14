@@ -565,18 +565,19 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 			// New Version
 			$new_version = $this->config['new_version'];
 
+			// Prepare warning!
 			$warning = '';
 
 			if ( $this->is_stable_version( $new_version ) ) {
 				$warning = sprintf( __( '%1$s%3$sThis is a stable release%3$s%2$s', 'alnp-beta-tester' ), '<h1>', '</h1>', '<span>&#9888;</span>' );
 			}
 
-			if ( $this->is_beta_version( $response->version ) ) {
-				$warning = __( '<h1><span>&#9888;</span>This is a beta release<span>&#9888;</span></h1>', 'alnp-beta-tester' );
+			if ( $this->is_beta_version( $new_version ) ) {
+				$warning = sprintf( __( '%1$s%3$sThis is a beta release%3$s%2$s', 'alnp-beta-tester' ), '<h1>', '</h1>', '<span>&#9888;</span>' );
 			}
 
-			if ( $this->is_rc_version( $response->version ) ) {
-				$warning = __( '<h1><span>&#9888;</span>This is a pre-release version<span>&#9888;</span></h1>', 'alnp-beta-tester' );
+			if ( $this->is_rc_version( $new_version ) ) {
+				$warning = sprintf( __( '%1$s%3$sThis is a pre-release%3$s%2$s', 'alnp-beta-tester' ), '<h1>', '</h1>', '<span>&#9888;</span>' );
 			}
 
 			// If the new version is no different than the one installed then reset results.
