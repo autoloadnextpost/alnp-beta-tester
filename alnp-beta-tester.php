@@ -1,31 +1,33 @@
 <?php
 /**
  * Plugin Name: Auto Load Next Post: Beta Tester
- * Plugin URI: https://github.com/AutoLoadNextPost/alnp-beta-tester
- * Version: 2.0.1
+ * Plugin URI: https://github.com/autoloadnextpost/alnp-beta-tester
+ * Version: 2.0.2
  * Description: Run bleeding edge versions of Auto Load Next Post from the GitHub repo. This will replace your installed version of Auto Load Next Post with the latest tagged prerelease on GitHub - use with caution, and not on production sites. You have been warned.
  * Author: Auto Load Next Post
  * Author URI: https://autoloadnextpost.com
  * Developer: Sébastien Dumont
  * Developer URI: https://sebastiendumont.com
- * GitHub Plugin URI: https://github.com/AutoLoadNextPost/alnp-beta-tester
+ * GitHub Plugin URI: https://github.com/autoloadnextpost/alnp-beta-tester
  *
  * Text Domain: alnp-beta-tester
  * Domain Path: /languages/
  *
  * Requires at least: 4.5
- * Tested up to: 4.9.2
+ * Tested up to: 5.2
  *
  * Based on WP_GitHub_Updater by Joachim Kudish.
  * Forked from WooCommerce Beta Tester by Mike Jolley and Claudio Sanches.
  *
- * Copyright: © 2018 Sébastien Dumont
+ * Copyright: © 2019 Sébastien Dumont
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
+ *
+ * @package   Auto Load Next Post: Beta Tester
+ * @author    Sébastien Dumont
+ * @copyright Copyright © 2019, Sébastien Dumont
+ * @license   GNU General Public License v3.0 http://www.gnu.org/licenses/gpl-3.0.html
  */
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
 
 if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 
@@ -55,7 +57,7 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 * @static
 		 * @since  2.0.0
 		 */
-		private static $version = '2.0.1';
+		private static $version = '2.0.2';
 
 		/**
 		 * Main Instance
@@ -76,7 +78,7 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 * @since  2.0.0
 		 */
 		public function __clone() {
-			_doing_it_wrong( __FUNCTION__, __( 'Foul!', 'alnp-beta-tester' ), $this->version );
+			_doing_it_wrong( __FUNCTION__, __( 'Cloning this object is forbidden.', 'alnp-beta-tester' ), self::$version );
 		}
 
 		/**
@@ -86,34 +88,48 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 * @since  2.0.0
 		 */
 		public function __wakeup() {
-			_doing_it_wrong( __FUNCTION__, __( 'Foul!', 'alnp-beta-tester' ), $this->version );
+			_doing_it_wrong( __FUNCTION__, __( 'Unserializing instances of this class is forbidden.', 'alnp-beta-tester' ), self::$version );
 		}
 
 		/**
 		 * Constructor
 		 *
-		 * @access public
+		 * @access  public
 		 * @static
-		 * @since  1.0.0
+		 * @since   1.0.0
+		 * @version 2.0.2
 		 */
 		public function __construct() {
 			$this->config = array(
 				'plugin_file'        => 'auto-load-next-post/auto-load-next-post.php',
 				'slug'               => 'auto-load-next-post',
 				'proper_folder_name' => 'auto-load-next-post',
-				'api_url'            => 'https://api.github.com/repos/AutoLoadNextPost/Auto-Load-Next-Post',
-				'github_url'         => 'https://github.com/AutoLoadNextPost/Auto-Load-Next-Post',
+				'api_url'            => 'https://api.github.com/repos/autoloadnextpost/auto-load-next-post',
+				'github_url'         => 'https://github.com/autoloadnextpost/auto-load-next-post',
 				'requires'           => '4.5',
-				'tested'             => '4.9.2'
+				'tested'             => '5.2'
 			);
 
 			add_action( 'plugin_loaded', array( $this, 'flush_update_cache' ) );
-			add_action( 'plugin_loaded', array( $this, 'check_alnp_installed' ) );
+			add_action( 'init', array( $this, 'check_alnp_installed' ) );
 			add_action( 'init', array( $this, 'load_text_domain' ), 0 );
+		} // END __construct()
+
+		/**
+		 * Run these filters once Auto Load Next Post is installed and active.
+		 *
+		 * @access public
+		 * @return void
+		 * @since  2.0.2
+		 */
+		public function alnp_active() {
 			add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'api_check' ) );
 			add_filter( 'plugins_api', array( $this, 'get_plugin_info' ), 10, 3 );
 			add_filter( 'upgrader_source_selection', array( $this, 'upgrader_source_selection' ), 10, 3 );
-		} // END __construct()
+
+			// Auto update Auto Load Next Post.
+			add_filter( 'auto_update_plugin', array( $this, 'auto_update_alnp' ), 100, 2 );
+		} // END alnp_active()
 
 		/**
 		 * Load the plugin text domain once the plugin has initialized.
@@ -139,51 +155,107 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		} // END flush_update_cache()
 
 		/**
-		 * Checks if Auto Load Next Post is installed.
+		 * Checks if Auto Load Next Post is installed before running filters for the WordPress updater.
 		 *
 		 * @access public
 		 * @since  2.0.0
-		 * @return bool
+		 * @return bool|void
 		 */
 		public function check_alnp_installed() {
 			if ( ! defined( 'AUTO_LOAD_NEXT_POST_VERSION' ) ) {
 				add_action( 'admin_notices', array( $this, 'alnp_not_installed' ) );
 				return false;
 			}
+
+			// Auto Load Next Post is active.
+			$this->alnp_active();
 		} // END check_alnp_installed()
 
 		/**
 		 * Auto Load Next Post is Not Installed Notice.
 		 *
-		 * @access public
-		 * @since  2.0.0
-		 * @return void
+		 * @access  public
+		 * @since   2.0.0
+		 * @version 2.0.2
+		 * @global  string $pagenow
+		 * @return  void
 		 */
 		public function alnp_not_installed() {
-			echo '<div class="error"><p>' . sprintf( __( 'Auto Load Next Post: Beta Tester requires %s to be installed.', 'alnp-beta-tester' ), '<a href="https://autoloadnextpost.com/" target="_blank">Auto Load Next Post</a>' ) . '</p></div>';
+			global $pagenow;
+
+			if ( $pagenow == 'update.php' ) {
+				return false;
+			}
+
+			echo '<div class="notice notice-error">';
+
+				echo '<p>' . sprintf( __( '%1$s requires %2$s%3$s%4$s to be installed and activated in order to serve updates from GitHub.', 'alnp-beta-tester' ), esc_html__( 'Auto Load Next Post: Beta Tester', 'alnp-beta-tester' ), '<strong>', '</strong>', esc_html__( 'Auto Load Next Post', 'alnp-beta-tester' ) ) . '</p>';
+
+				echo '<p>';
+
+				if ( ! is_plugin_active( 'auto-load-next-post/auto-load-next-post.php' ) && current_user_can( 'activate_plugin', 'auto-load-next-post/auto-load-next-post.php' ) ) :
+
+					echo '<a href="' . esc_url( wp_nonce_url( self_admin_url( 'plugins.php?action=activate&plugin=auto-load-next-post/auto-load-next-post.php&plugin_status=active' ), 'activate-plugin_auto-load-next-post/auto-load-next-post.php' ) ) . '" class="button button-primary">' . sprintf( esc_html__( 'Activate %s', 'alnp-beta-tester' ), esc_html__( 'Auto Load Next Post', 'alnp-beta-tester' ) ) . '</a>';
+
+				else :
+
+					if ( current_user_can( 'install_plugins' ) ) {
+						$url = wp_nonce_url( self_admin_url( 'update.php?action=install-plugin&plugin=auto-load-next-post' ), 'install-plugin_auto-load-next-post' );
+					} else {
+						$url = 'https://wordpress.org/plugins/auto-load-next-post/';
+					}
+
+					echo '<a href="' . esc_url( $url ) . '" class="button button-primary">' . sprintf( esc_html__( 'Install %s', 'alnp-beta-tester' ), esc_html__( 'Auto Load Next Post', 'alnp-beta-tester' ) ) . '</a>';
+
+				endif;
+
+				if ( current_user_can( 'deactivate_plugin', 'alnp-beta-tester/alnp-beta-tester.php' ) ) :
+					echo '<a href="' . esc_url( wp_nonce_url( 'plugins.php?action=deactivate&plugin=alnp-beta-tester/alnp-beta-tester.php&plugin_status=inactive', 'deactivate-plugin_alnp-beta-tester/alnp-beta-tester.php' ) ) . '" class="button button-secondary">' . sprintf( esc_html__( 'Turn off %s plugin', 'alnp-beta-tester' ), esc_html__( 'Auto Load Next Post: Beta Tester', 'alnp-beta-tester' ) ) . '</a>';
+				endif;
+
+				echo '</p>';
+
+			echo '</div>';
 		} // END alnp_not_installed()
+
+		/**
+		 * Enable auto updates for Auto Load Next Post.
+		 *
+		 * @access public
+		 * @since  2.0.2
+		 * @param  bool   $update Should this autoupdate.
+		 * @param  object $plugin Plugin being checked.
+		 * @return bool
+		 */
+		public function auto_update_alnp( $update, $plugin ) {
+			if ( 'auto-load-next-post' === $item->slug ) {
+				return true;
+			} else {
+				return $update;
+			}
+		} // END auto_update_alnp()
 
 		/**
 		 * Update the required plugin data arguments.
 		 *
 		 * @access  public
 		 * @since   1.0.0
-		 * @version 2.0.1
+		 * @version 2.0.2
 		 * @return  array
 		 */
 		public function set_update_args() {
-			$plugin_data                    = $this->get_plugin_data();
-			$this->config[ 'plugin_name' ]  = 'Auto Load Next Post (Pre-Release ' . $this->get_latest_prerelease() . ')';
-			$this->config[ 'version' ]      = $plugin_data['Version'];
-			$this->config[ 'author' ]       = $plugin_data['Author'];
-			$this->config[ 'homepage' ]     = $plugin_data['PluginURI'];
-			$this->config[ 'new_version' ]  = str_replace( 'v', '', $this->get_latest_prerelease() );
-			$this->config[ 'last_updated' ] = $this->get_date();
-			$this->config[ 'description' ]  = $this->get_description();
-			$this->config[ 'changelog' ]    = $this->get_changelog();
-			$this->config[ 'zip_name' ]     = $this->get_latest_prerelease();
+			$plugin_data                  = $this->get_plugin_data();
+			$this->config['plugin_name']  = 'Auto Load Next Post ' . $this->get_latest_prerelease();
+			$this->config['version']      = $plugin_data['Version'];
+			$this->config['author']       = $plugin_data['Author'];
+			$this->config['homepage']     = $plugin_data['PluginURI'];
+			$this->config['new_version']  = str_replace( 'v', '', $this->get_latest_prerelease() );
+			$this->config['last_updated'] = $this->get_date();
+			$this->config['description']  = $this->get_description();
+			$this->config['changelog']    = $this->get_changelog();
+			$this->config['zip_name']     = $this->get_latest_prerelease();
 
-			$this->config[ 'zip_url' ]      = 'https://github.com/AutoLoadNextPost/Auto-Load-Next-Post/zipball/' . $this->config[ 'zip_name' ];
+			$this->config['zip_url']      = 'https://github.com/autoloadnextpost/auto-load-next-post/zipball/' . $this->config[ 'zip_name' ];
 		} // END set_update_args()
 
 		/**
@@ -240,12 +312,55 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 			return $tagged_version;
 		} // END get_latest_prerelease()
 
+
+		/**
+		 * Get Published date of New Version from GitHub.
+		 *
+		 * @access public
+		 * @since  2.0.2
+		 * @return string $published_date of the latest prerelease
+		 */
+		public function get_latest_prerelease_date() {
+			$published_date = get_site_transient( md5( $this->config['slug'] ) . '_latest_published_date' );
+
+			if ( $this->overrule_transients() || empty( $published_date ) ) {
+
+				$raw_response = wp_remote_get( trailingslashit( $this->config['api_url'] ) . 'releases' );
+
+				if ( is_wp_error( $raw_response ) ) {
+					return false;
+				}
+
+				$releases       = json_decode( $raw_response['body'] );
+				$published_date = false;
+
+				if ( is_array( $releases ) ) {
+					foreach ( $releases as $release ) {
+
+						// If the release is a pre-release then return the published date.
+						if ( $release->prerelease ) {
+							$published_date = $release->published_at;
+							break;
+						}
+					}
+				}
+
+				// Refresh every 6 hours.
+				if ( ! empty( $published_date ) ) {
+					set_site_transient( md5( $this->config['slug'] ) . '_latest_published_date', $published_date, 60 * 60 * 6 );
+				}
+			}
+
+			return $published_date;
+		} // END get_latest_prerelease_date()
+
 		/**
 		 * Get Changelog of New Version from GitHub.
 		 *
-		 * @access public
-		 * @since  2.0.1
-		 * @return string $changelog of the latest prerelease
+		 * @access  public
+		 * @since   2.0.1
+		 * @version 2.0.2
+		 * @return  string $changelog of the latest prerelease
 		 */
 		public function get_latest_prerelease_changelog() {
 			$changelog = get_site_transient( md5( $this->config['slug'] ) . '_latest_changelog' );
@@ -266,7 +381,12 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 
 						// If the release is a pre-release then return the body.
 						if ( $release->prerelease ) {
-							$changelog = $release->body;
+							if ( ! class_exists( 'Parsedown' ) ) {
+								include_once( 'parsedown.php' );
+							}
+							$Parsedown = new Parsedown();
+
+							$changelog = $Parsedown->text( $release->body );
 							break;
 						}
 					}
@@ -317,13 +437,14 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		/**
 		 * Get update date.
 		 *
-		 * @access public
-		 * @since  1.0.0
-		 * @return string $_date the date
+		 * @access  public
+		 * @since   1.0.0
+		 * @version 2.0.2
+		 * @return  string $_date the date
 		 */
 		public function get_date() {
-			$_date = $this->get_github_data();
-			return ! empty( $_date->updated_at ) ? date( 'Y-m-d', strtotime( $_date->updated_at ) ) : false;
+			$_date = $this->get_latest_prerelease_date();
+			return ! empty( $_date ) ? date( 'Y-m-d', strtotime( $_date ) ) : false;
 		} // END get_date()
 
 		/**
@@ -364,10 +485,11 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		/**
 		 * Hook into the plugin update check and connect to GitHub.
 		 *
-		 * @access public
-		 * @since  1.0.0
-		 * @param  object $transient the plugin data transient
-		 * @return object $transient updated plugin data transient
+		 * @access  public
+		 * @since   1.0.0
+		 * @version 2.0.2
+		 * @param   object $transient the plugin data transient
+		 * @return  object $transient updated plugin data transient
 		 */
 		public function api_check( $transient ) {
 			// Check if the transient contains the 'checked' information
@@ -376,9 +498,17 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 				return $transient;
 			}
 
-			// Clear our transient.
-			delete_site_transient( md5( $this->config['slug'] ) . '_latest_tag' );
-			delete_site_transient( md5( $this->config['slug'] ) . '_latest_changelog' );
+			/**
+			 * Clear our transient if we have debug enabled and overruled the transients.
+			 * This will allow the API to check fresh every time.
+			 *
+			 * DEV NOTE: If api checked to many times in a short amount of time, 
+			 * GitHub will block you from accessing the API for 1 hour.
+			 */
+			if ( WP_DEBUG && $this->overrule_transients() ) {
+				delete_site_transient( md5( $this->config['slug'] ) . '_latest_tag' );
+				delete_site_transient( md5( $this->config['slug'] ) . '_latest_changelog' );
+			}
 
 			// Update tags.
 			$this->set_update_args();
@@ -386,7 +516,16 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 			// Check the version and decide if it's new.
 			$update = version_compare( $this->config['new_version'], $this->config['version'], '>' );
 
-			if ( $update ) {
+			// If the version is not newer then return default.
+			if ( ! $update ) {
+				return $transient;
+			}
+
+			// Check if its a beta release or a release candidate.
+			$is_beta_rc = ( $this->is_beta_version( $this->config['new_version'] ) || $this->is_rc_version( $this->config['new_version'] ) );
+
+			// Only set the updater to download if its a beta or pre-release version.
+			if ( $is_beta_rc ) {
 				$response              = new stdClass;
 				$response->plugin      = $this->config['slug'];
 				$response->new_version = $this->config['new_version'];
@@ -404,40 +543,91 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		} // END api_check()
 
 		/**
-		 * Get Plugin info.
+		 * Filters the Plugin Installation API response results.
 		 *
-		 * @access public
-		 * @since  1.0.0
-		 * @param  bool   $false    always false
-		 * @param  string $action   the API function being performed
-		 * @param  object $args     plugin arguments
-		 * @return object $response the plugin info
+		 * @access  public
+		 * @since   1.0.0
+		 * @version 2.0.2
+		 * @param   object|WP_Error $response Response object or WP_Error.
+		 * @param   string          $action   The type of information being requested from the Plugin Installation API.
+		 * @param   object          $args     Plugin API arguments.
+		 * @return  object          $response The plugin results.
 		 */
-		public function get_plugin_info( $false, $action, $response ) {
+		public function get_plugin_info( $response, $action, $args ) {
 			// Check if this call for the API is for the right plugin.
 			if ( ! isset( $response->slug ) || $response->slug != $this->config['slug'] ) {
-				return false;
+				return $response;
 			}
 
 			// Update tags
 			$this->set_update_args();
 
-			$response->slug          = $this->config['slug'];
-			$response->plugin        = $this->config['slug'];
-			$response->name          = $this->config['plugin_name'];
-			$response->plugin_name   = $this->config['plugin_name'];
-			$response->version       = $this->config['new_version'];
-			$response->author        = $this->config['author'];
-			$response->homepage      = $this->config['homepage'];
-			$response->requires      = $this->config['requires'];
-			$response->tested        = $this->config['tested'];
-			$response->downloaded    = 0;
-			$response->last_updated  = $this->config['last_updated'];
-			$response->sections      = array(
+			// New Version
+			$new_version = $this->config['new_version'];
+
+			$warning = '';
+
+			if ( $this->is_stable_version( $new_version ) ) {
+				$warning = sprintf( __( '%1$s%3$sThis is a stable release%3$s%2$s', 'alnp-beta-tester' ), '<h1>', '</h1>', '<span>&#9888;</span>' );
+			}
+
+			if ( $this->is_beta_version( $response->version ) ) {
+				$warning = __( '<h1><span>&#9888;</span>This is a beta release<span>&#9888;</span></h1>', 'alnp-beta-tester' );
+			}
+
+			if ( $this->is_rc_version( $response->version ) ) {
+				$warning = __( '<h1><span>&#9888;</span>This is a pre-release version<span>&#9888;</span></h1>', 'alnp-beta-tester' );
+			}
+
+			// If the new version is no different than the one installed then reset results.
+			if ( version_compare( $response->version, $new_version, '=' ) ) {
+				$response->name        = 'Auto Load Next Post';
+				$response->plugin_name = 'Auto Load Next Post';
+				$response->version     = $plugin_data['Version'];
+
+				return $response;
+			}
+
+			// Update the results to return.
+			$response->name            = $this->config['plugin_name'];
+			$response->plugin_name     = $this->config['plugin_name'];
+			$response->version         = $new_version;
+			$response->author          = $this->config['author'];
+			$response->author_homepage = 'https://autoloadnextpost.com';
+			$response->homepage        = $this->config['homepage'];
+			$response->requires        = $this->config['requires'];
+			$response->tested          = $this->config['tested'];
+			$response->last_updated    = $this->config['last_updated'];
+			$response->slug            = $this->config['slug'];
+			$response->plugin          = $this->config['slug'];
+
+			// Sections
+			$response->sections        = array(
 				'description' => $this->config['description'],
 				'changelog'   => $this->config['changelog']
 			);
-			$response->download_link = $this->config['zip_url'];
+			$response->download_link   = $this->config['zip_url'];
+
+			$download_counter = wp_remote_get( 'https://autoloadnextpost.com/download/counter/dl-counter.php' );
+			if ( ! is_wp_error( $download_counter ) ) {
+				$response->downloaded = wp_remote_retrieve_body( $download_counter );
+			}
+
+			$response->contributors = array(
+				'autoloadnextpost' => 'https://autoloadnextpost.com',
+				'sebd86'           => 'https://sebastiendumont.com',
+			);
+
+			// Add WordPress dot org banners for recognition.
+			$response->banners = array(
+				'low'  => 'https://raw.githubusercontent.com/autoloadnextpost/auto-load-next-post/master/.wordpress-org/banner-772x250.png',
+				'high' => 'https://raw.githubusercontent.com/autoloadnextpost/auto-load-next-post/master/.wordpress-org/banner-1544x500.png'
+			);
+
+			// Apply warning to all sections if any.
+			foreach ( $response->sections as $key => $section ) {
+				$response->sections[ $key ] = $warning . $section;
+			}
 
 			return $response;
 		} // END get_plugin_info()
@@ -445,18 +635,19 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		/**
 		 * Rename the downloaded zip file.
 		 *
-		 * @access public
-		 * @since  1.0.0
-		 * @global $wp_filesystem
-		 * @param  string $source
-		 * @param  string $remote_source
-		 * @param  $upgrader
-		 * @return file|WP_Error
+		 * @access  public
+		 * @since   1.0.0
+		 * @version 2.0.2
+		 * @global  $wp_filesystem
+		 * @param   string $source
+		 * @param   string $remote_source
+		 * @param   $upgrader
+		 * @return  file|WP_Error
 		 */
 		public function upgrader_source_selection( $source, $remote_source, $upgrader ) {
 			global $wp_filesystem;
 
-			if ( strstr( $source, '/AutoLoadNextPost-Auto-Load-Next-Post-' ) ) {
+			if ( strstr( $source, '/autoloadnextpost-auto-load-next-post-' ) ) {
 				$corrected_source = trailingslashit( $remote_source ) . trailingslashit( $this->config[ 'proper_folder_name' ] );
 
 				if ( $wp_filesystem->move( $source, $corrected_source, true ) ) {
@@ -468,6 +659,45 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 
 			return $source;
 		} // END upgrader_source_selection()
+
+		/**
+		 * Return true if version string is a beta version.
+		 *
+		 * @access protected
+		 * @static
+		 * @since  2.0.2
+		 * @param  string $version_str Version string.
+		 * @return bool
+		 */
+		protected static function is_beta_version( $version_str ) {
+			return strpos( $version_str, 'beta' ) !== false;
+		} // END is_beta_version()
+
+		/**
+		 * Return true if version string is a Release Candidate.
+		 *
+		 * @access protected
+		 * @static
+		 * @since  2.0.2
+		 * @param  string $version_str Version string.
+		 * @return bool
+		 */
+		protected static function is_rc_version( $version_str ) {
+			return strpos( $version_str, 'rc' ) !== false;
+		} // END is_rc_version()
+
+		/**
+		 * Return true if version string is a stable version.
+		 *
+		 * @access protected
+		 * @static
+		 * @since  2.0.2
+		 * @param  string $version_str Version string.
+		 * @return bool
+		 */
+		protected static function is_stable_version( $version_str ) {
+			return ! self::is_beta_version( $version_str ) && ! self::is_rc_version( $version_str );
+		} // END is_stable_version()
 
 	} // END class
 
