@@ -221,18 +221,23 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		/**
 		 * Enable auto updates for Auto Load Next Post.
 		 *
-		 * @access public
-		 * @since  2.0.2
-		 * @param  bool   $update Should this autoupdate.
-		 * @param  object $plugin Plugin being checked.
-		 * @return bool
+		 * @access  public
+		 * @since   2.0.2
+		 * @version 3.0.0
+		 * @param   bool   $should_update Should this auto update.
+		 * @param   object $plugin Plugin being checked.
+		 * @return  bool
 		 */
-		public function auto_update_alnp( $update, $plugin ) {
-			if ( 'auto-load-next-post' === $item->slug ) {
-				return true;
-			} else {
-				return $update;
+		public function auto_update_alnp( $should_update, $plugin ) {
+			if ( ! isset( $plugin->slug ) ) {
+				return $should_update;
 			}
+
+			if ( 'auto-load-next-post' === $plugin->slug ) {
+				$should_update = true;
+			}
+
+			return $should_update;
 		} // END auto_update_alnp()
 
 		/**
