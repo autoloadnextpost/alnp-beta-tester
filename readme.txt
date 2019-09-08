@@ -24,6 +24,13 @@ Forked from the WooCommerce Beta Tester by Mike Jolley and Claudio Sanches.
 
 == Changelog ==
 
+= 3.0.0 =
+
+* Fixed:  Fixed plugin information and applied tweaks to support latest WP core changes.
+* Tweaked: Improved data returned for update if any.
+* Tweaked: Plugin updater to read from new GitHub zip url.
+* Tweaked: Auto updater.
+
 = 2.0.2 =
 
 * New: Made beta updates auto-update.
