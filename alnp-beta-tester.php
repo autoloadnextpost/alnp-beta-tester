@@ -106,7 +106,8 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 				'proper_folder_name' => 'auto-load-next-post',
 				'api_url'            => 'https://api.github.com/repos/autoloadnextpost/auto-load-next-post',
 				'requires'           => '4.5',
-				'tested'             => '5.2'
+				'tested'             => '5.2.3',
+				'requires_php'       => '5.6'
 			);
 
 			add_action( 'plugin_loaded', array( $this, 'flush_update_cache' ) );
