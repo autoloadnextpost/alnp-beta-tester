@@ -18,7 +18,7 @@ module.exports = function(grunt) {
 						'node_modules',
 					],
 					mainFile: '<%= pkg.name %>.php', // Main project file.
-					potComments: '# Copyright (c) {{year}} Sébastien Dumont', // The copyright at the beginning of the POT file.
+					potComments: '# Copyright (c) {year} Sébastien Dumont', // The copyright at the beginning of the POT file.
 					potFilename: '<%= pkg.name %>.pot', // Name of the POT file.
 					potHeaders: {
 						'poedit': true,                                       // Includes common Poedit headers.
