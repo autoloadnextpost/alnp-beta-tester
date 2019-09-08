@@ -552,15 +552,20 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 *
 		 * @access  public
 		 * @since   1.0.0
-		 * @version 2.0.2
+		 * @version 3.0.0
 		 * @param   object|WP_Error $response Response object or WP_Error.
 		 * @param   string          $action   The type of information being requested from the Plugin Installation API.
 		 * @param   object          $args     Plugin API arguments.
 		 * @return  object          $response The plugin results.
 		 */
 		public function get_plugin_info( $response, $action, $args ) {
+			// Check that we are getting plugin information.
+			if ( 'plugin_information' !== $action ) {
+				return $response;
+			}
+
 			// Check if this call for the API is for the right plugin.
-			if ( ! isset( $response->slug ) || $response->slug != $this->config['slug'] ) {
+			if ( ! isset( $args->slug ) || $args->slug != $this->config['slug'] ) {
 				return $response;
 			}
 
@@ -603,6 +608,7 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 			$response->homepage        = $this->config['homepage'];
 			$response->requires        = $this->config['requires'];
 			$response->tested          = $this->config['tested'];
+			$response->requires_php    = $this->config['requires_php'];
 			$response->last_updated    = $this->config['last_updated'];
 			$response->slug            = $this->config['slug'];
 			$response->plugin          = $this->config['slug'];
@@ -620,8 +626,20 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 			}
 
 			$response->contributors = array(
-				'autoloadnextpost' => 'https://autoloadnextpost.com',
-				'sebd86'           => 'https://sebastiendumont.com',
+				'autoloadnextpost' => array(
+					'display_name' => 'Auto Load Next Post',
+					'profile'      => esc_url( 'https://autoloadnextpost.com' ),
+					'avatar'       => get_avatar_url( 'autoloadnextpost@gmail.com', array(
+						'size' => '36',
+					) ),
+				),
+				'sebd86' => array(
+					'display_name' => 'Sébastien Dumont',
+					'profile'      => esc_url( 'https://sebastiendumont.com' ),
+					'avatar'       => get_avatar_url( 'mailme@sebastiendumont.com', array(
+						'size' => '36',
+					) ),
+				),
 			);
 
 			// Add WordPress dot org banners for recognition.
