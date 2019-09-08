@@ -518,6 +518,30 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 			// Update tags.
 			$this->set_update_args();
 
+			// Filename.
+			$filename = $this->config['plugin_file'];
+
+			$data = array(
+				'id'             => $this->config['slug'],
+				'slug'           => $this->config['slug'],
+				'plugin'         => $filename,
+				'new_version'    => $this->config['new_version'],
+				'requires'       => $this->config['requires'],
+				'tested'         => $this->config['tested'],
+				'requires_php'   => $this->config['requires_php'],
+				'url'            => $this->config['homepage'],
+				'icons'          => array(
+					'2x' => esc_url( 'https://raw.githubusercontent.com/autoloadnextpost/auto-load-next-post/master/.wordpress-org/icon-256x256.png' ),
+					'1x' => esc_url( 'https://raw.githubusercontent.com/autoloadnextpost/auto-load-next-post/master/.wordpress-org/icon-128x128.png' ),
+				),
+				'banners'        => array(
+					'low'  => esc_url( 'https://raw.githubusercontent.com/autoloadnextpost/auto-load-next-post/master/.wordpress-org/banner-772x250.png' ),
+					'high' => esc_url( 'https://raw.githubusercontent.com/autoloadnextpost/auto-load-next-post/master/.wordpress-org/banner-1544x500.png' )
+				),
+				'upgrade_notice' => '',
+				'package'        => $this->config['zip_url']
+			);
+
 			// Check the version and decide if it's new.
 			$update = version_compare( $this->config['new_version'], $this->config['version'], '>' );
 
