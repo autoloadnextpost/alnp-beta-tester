@@ -3,7 +3,7 @@
   "name": "alnp-beta-tester",
   "author": "AutoLoadNextPost",
   "license": "GPL-3.0",
-  "version": "2.0.2",
+  "version": "3.0.0",
   "description": "Run bleeding edge versions of Auto Load Next Post from the GitHub repo. This will replace your installed version of Auto Load Next Post with the latest tagged prerelease on GitHub - use with caution, and not on production sites. You have been warned.",
   "homepage": "https://autoloadnextpost.com/",
   "main": "Gruntfile.js",

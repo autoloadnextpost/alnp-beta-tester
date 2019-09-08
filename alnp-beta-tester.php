@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Load Next Post: Beta Tester
  * Plugin URI: https://github.com/autoloadnextpost/alnp-beta-tester
- * Version: 2.0.2
+ * Version: 3.0.0
  * Description: Run bleeding edge versions of Auto Load Next Post from the GitHub repo. This will replace your installed version of Auto Load Next Post with the latest tagged prerelease on GitHub - use with caution, and not on production sites. You have been warned.
  * Author: Auto Load Next Post
  * Author URI: https://autoloadnextpost.com
@@ -57,7 +57,7 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 * @static
 		 * @since  2.0.0
 		 */
-		private static $version = '2.0.2';
+		private static $version = '3.0.0';
 
 		/**
 		 * Main Instance
@@ -97,7 +97,7 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 * @access  public
 		 * @static
 		 * @since   1.0.0
-		 * @version 2.0.2
+		 * @version 3.0.0
 		 */
 		public function __construct() {
 			$this->config = array(
