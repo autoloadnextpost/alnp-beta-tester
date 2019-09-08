@@ -245,22 +245,22 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 *
 		 * @access  public
 		 * @since   1.0.0
-		 * @version 2.0.2
+		 * @version 3.0.0
 		 * @return  array
 		 */
 		public function set_update_args() {
 			$plugin_data                  = $this->get_plugin_data();
+
 			$this->config['plugin_name']  = 'Auto Load Next Post ' . $this->get_latest_prerelease();
+			$this->config['description']  = $this->get_description();
 			$this->config['version']      = $plugin_data['Version'];
 			$this->config['author']       = $plugin_data['Author'];
 			$this->config['homepage']     = $plugin_data['PluginURI'];
 			$this->config['new_version']  = str_replace( 'v', '', $this->get_latest_prerelease() );
 			$this->config['last_updated'] = $this->get_date();
-			$this->config['description']  = $this->get_description();
 			$this->config['changelog']    = $this->get_changelog();
 			$this->config['zip_name']     = $this->get_latest_prerelease();
-
-			$this->config['zip_url']      = 'https://github.com/autoloadnextpost/auto-load-next-post/zipball/' . $this->config[ 'zip_name' ];
+			$this->config['zip_url']      = 'https://github.com/autoloadnextpost/auto-load-next-post/archive/' . $this->config['zip_name'] . '.zip';
 		} // END set_update_args()
 
 		/**
