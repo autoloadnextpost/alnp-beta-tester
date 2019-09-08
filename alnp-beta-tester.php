@@ -105,7 +105,6 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 				'slug'               => 'auto-load-next-post',
 				'proper_folder_name' => 'auto-load-next-post',
 				'api_url'            => 'https://api.github.com/repos/autoloadnextpost/auto-load-next-post',
-				'github_url'         => 'https://github.com/autoloadnextpost/auto-load-next-post',
 				'requires'           => '4.5',
 				'tested'             => '5.2'
 			);
