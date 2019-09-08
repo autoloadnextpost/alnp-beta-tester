@@ -492,13 +492,12 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 *
 		 * @access  public
 		 * @since   1.0.0
-		 * @version 2.0.2
+		 * @version 3.0.0
 		 * @param   object $transient the plugin data transient
 		 * @return  object $transient updated plugin data transient
 		 */
 		public function api_check( $transient ) {
-			// Check if the transient contains the 'checked' information
-			// If not, just return its value without hacking it
+			// If no plugins have been checked then return its value without hacking it.
 			if ( empty( $transient->checked ) ) {
 				return $transient;
 			}
