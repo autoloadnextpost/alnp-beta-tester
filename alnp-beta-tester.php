@@ -550,19 +550,13 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 			// Check if its a beta release or a release candidate.
 			$is_beta_rc = ( $this->is_beta_version( $this->config['new_version'] ) || $this->is_rc_version( $this->config['new_version'] ) );
 
-			// Only set the updater to download if its a beta or pre-release version.
+			// Only set the updater to download if its a beta or pre-release version and is newer.
 			if ( $is_beta_rc ) {
-				$response              = new stdClass;
-				$response->plugin      = $this->config['slug'];
-				$response->new_version = $this->config['new_version'];
-				$response->slug        = $this->config['slug'];
-				$response->url         = $this->config['github_url'];
-				$response->package     = $this->config['zip_url'];
-
-				// If response is false, don't alter the transient.
-				if ( false !== $response ) {
-					$transient->response[ $this->config['plugin_file'] ] = $response;
-				}
+				$transient->response[ $filename ] = (object) $data;
+				unset( $transient->no_update[ $filename ] );
+			} else {
+				$transient->no_update[ $filename ] = (object) $data;
+				unset( $transient->response[ $filename ] );
 			}
 
 			return $transient;
