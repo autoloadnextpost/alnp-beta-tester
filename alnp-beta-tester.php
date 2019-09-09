@@ -680,23 +680,23 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 		 *
 		 * @access  public
 		 * @since   1.0.0
-		 * @version 2.0.2
-		 * @global  $wp_filesystem
-		 * @param   string $source
-		 * @param   string $remote_source
-		 * @param   $upgrader
+		 * @version 3.0.0
+		 * @global  WP_Filesystem_Base $wp_filesystem WordPress filesystem subclass.
+		 * @param   string             $source        File source location.
+		 * @param   string             $remote_source Remote file source location.
+		 * @param   WP_Upgrader        $upgrader      WP_Upgrader instance.
 		 * @return  file|WP_Error
 		 */
 		public function upgrader_source_selection( $source, $remote_source, $upgrader ) {
 			global $wp_filesystem;
 
-			if ( strstr( $source, '/autoloadnextpost-auto-load-next-post-' ) ) {
+			if ( strstr( $source, '/auto-load-next-post-' ) ) {
 				$corrected_source = trailingslashit( $remote_source ) . trailingslashit( $this->config[ 'proper_folder_name' ] );
 
 				if ( $wp_filesystem->move( $source, $corrected_source, true ) ) {
 					return $corrected_source;
 				} else {
-					return new WP_Error( __( 'Unable to download source file.', 'alnp-beta-tester' ), 500 );
+					return new WP_Error( 'alnp_updater_source_selection', __( 'Unable to move source of update.', 'alnp-beta-tester' ), 500 );
 				}
 			}
 
