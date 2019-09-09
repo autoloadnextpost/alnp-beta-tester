@@ -598,6 +598,11 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 			// New Version
 			$new_version = $this->config['new_version'];
 
+			// If the new version is no different than the one installed then just return response.
+			if ( version_compare( $this->config['version'], $new_version, '=' ) ) {
+				return $response;
+			}
+
 			// Prepare warning!
 			$warning = '';
 
@@ -611,15 +616,6 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 
 			if ( $this->is_rc_version( $new_version ) ) {
 				$warning = sprintf( __( '%1$s%3$sThis is a pre-release%3$s%2$s', 'alnp-beta-tester' ), '<h1>', '</h1>', '<span>&#9888;</span>' );
-			}
-
-			// If the new version is no different than the one installed then reset results.
-			if ( version_compare( $response->version, $new_version, '=' ) ) {
-				$response->name        = 'Auto Load Next Post';
-				$response->plugin_name = 'Auto Load Next Post';
-				$response->version     = $plugin_data['Version'];
-
-				return $response;
 			}
 
 			// Update the results to return.
