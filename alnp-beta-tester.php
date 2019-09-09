@@ -517,6 +517,13 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 			// Update tags.
 			$this->set_update_args();
 
+			// Check the version and decide if it's new.
+			$update = version_compare( $this->config['new_version'], $this->config['version'], '>' );
+
+			if ( ! $update ) {
+				return $transient;
+			}
+
 			// Filename.
 			$filename = $this->config['plugin_file'];
 
@@ -525,7 +532,6 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 				'slug'           => $this->config['slug'],
 				'plugin'         => $filename,
 				'new_version'    => $this->config['new_version'],
-				'requires'       => $this->config['requires'],
 				'tested'         => $this->config['tested'],
 				'requires_php'   => $this->config['requires_php'],
 				'url'            => $this->config['homepage'],
@@ -537,17 +543,9 @@ if ( ! class_exists( 'ALNP_Beta_Tester' ) ) {
 					'low'  => esc_url( 'https://raw.githubusercontent.com/autoloadnextpost/auto-load-next-post/master/.wordpress-org/banner-772x250.png' ),
 					'high' => esc_url( 'https://raw.githubusercontent.com/autoloadnextpost/auto-load-next-post/master/.wordpress-org/banner-1544x500.png' )
 				),
-				'upgrade_notice' => '',
-				'package'        => $this->config['zip_url']
+				'package'        => $this->config['zip_url'],
+				'zip_url'        => $this->config['zip_url']
 			);
-
-			// Check the version and decide if it's new.
-			$update = version_compare( $this->config['new_version'], $this->config['version'], '>' );
-
-			// If the version is not newer then return default.
-			if ( ! $update ) {
-				return $transient;
-			}
 
 			// Check if its a beta release or a release candidate.
 			$is_beta_rc = ( $this->is_beta_version( $this->config['new_version'] ) || $this->is_rc_version( $this->config['new_version'] ) );
